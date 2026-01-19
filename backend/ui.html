@@ -3,231 +3,571 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Shadow Coach v1</title>
+    <title>4 Signals Socratic Coach</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             height: 100vh;
             display: flex;
             flex-direction: column;
-            background: #1a1a1a;
-            color: #e0e0e0;
+            background: #0f1115;
+            color: #e6e8ef;
         }
-        
+
         .header {
-            padding: 1rem;
-            background: #2a2a2a;
-            border-bottom: 1px solid #3a3a3a;
+            padding: 1rem 1.5rem;
+            background: #161922;
+            border-bottom: 1px solid #262b3a;
             display: flex;
             gap: 1rem;
             align-items: center;
         }
-        
+
+        .header h1 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #f3f4f8;
+            margin-right: auto;
+        }
+
         .status {
             font-size: 0.85rem;
-            color: #888;
+            color: #94a0b8;
         }
-        
+
         .status.active {
-            color: #4caf50;
+            color: #6ee7b7;
         }
-        
+
         button {
             padding: 0.5rem 1rem;
-            background: #4a4a4a;
-            color: #fff;
-            border: 1px solid #5a5a5a;
-            border-radius: 4px;
+            background: #232938;
+            color: #f4f5f8;
+            border: 1px solid #2f3648;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 0.9rem;
         }
-        
+
         button:hover {
-            background: #5a5a5a;
+            background: #2f3648;
         }
-        
+
         button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
-        
+
         .container {
             display: flex;
             flex: 1;
             overflow: hidden;
         }
-        
-        .pane {
+
+        .signals-pane {
             flex: 1;
             display: flex;
             flex-direction: column;
-            border-right: 1px solid #3a3a3a;
-            overflow: hidden;
+            padding: 1.5rem;
+            gap: 1.25rem;
+            overflow-y: auto;
         }
-        
-        .pane:last-child {
-            border-right: none;
+
+        .best-question {
+            background: linear-gradient(135deg, #1e2434, #1b1f2b);
+            border: 1px solid #2b3244;
+            padding: 1.25rem 1.5rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(8, 10, 20, 0.4);
         }
-        
-        .pane-header {
-            padding: 0.75rem 1rem;
-            background: #2a2a2a;
-            border-bottom: 1px solid #3a3a3a;
-            font-weight: 600;
+
+        .best-question h2 {
             font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #a5b4fc;
+            margin-bottom: 0.5rem;
         }
-        
+
+        .best-question p {
+            font-size: 1.1rem;
+            line-height: 1.5;
+            color: #f4f6fb;
+        }
+
+        .signals-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .signal-card {
+            background: #151a25;
+            border: 1px solid #252c3f;
+            border-radius: 16px;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            box-shadow: 0 12px 24px rgba(6, 8, 18, 0.35);
+        }
+
+        .signal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.25rem 0.6rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            background: #1f2534;
+            color: #cbd5f5;
+            border: 1px solid #313a52;
+        }
+
+        .confidence {
+            font-size: 0.8rem;
+            color: #9aa8c7;
+        }
+
+        .signal-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #f8fafc;
+        }
+
+        .signal-detail {
+            font-size: 0.9rem;
+            color: #c7cfde;
+            line-height: 1.5;
+        }
+
+        .signal-evidence {
+            font-size: 0.85rem;
+            color: #9aa8c7;
+            border-left: 3px solid #2b3244;
+            padding-left: 0.75rem;
+            font-style: italic;
+        }
+
+        .signal-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .signal-actions button {
+            background: #1f2534;
+            border-color: #2c3448;
+            font-size: 0.8rem;
+        }
+
+        .signal-actions button.primary {
+            background: #4f46e5;
+            border-color: #4f46e5;
+        }
+
+        .signal-actions button.primary:hover {
+            background: #4338ca;
+        }
+
+        .signal-status {
+            font-size: 0.75rem;
+            color: #7d8aa8;
+        }
+
+        .signal-empty {
+            color: #7c879f;
+            font-size: 0.85rem;
+            border: 1px dashed #2f374b;
+            border-radius: 12px;
+            padding: 1rem;
+        }
+
+        .transcript-pane {
+            width: 30%;
+            max-width: 360px;
+            border-left: 1px solid #262b3a;
+            background: #121620;
+            display: flex;
+            flex-direction: column;
+            transition: width 0.2s ease;
+        }
+
+        .transcript-pane.collapsed {
+            width: 48px;
+        }
+
+        .transcript-header {
+            padding: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #262b3a;
+            gap: 0.5rem;
+        }
+
+        .transcript-header button {
+            padding: 0.35rem 0.6rem;
+            font-size: 0.75rem;
+        }
+
+        .transcript-title {
+            font-size: 0.85rem;
+            color: #d3d8e6;
+        }
+
         .transcript-content {
             flex: 1;
             overflow-y: auto;
             padding: 1rem;
             font-family: 'Courier New', monospace;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             line-height: 1.6;
         }
-        
+
+        .transcript-pane.collapsed .transcript-content,
+        .transcript-pane.collapsed .transcript-title {
+            display: none;
+        }
+
         .transcript-line {
             margin-bottom: 0.5rem;
             padding: 0.25rem 0;
             border-left: 3px solid transparent;
             padding-left: 0.5rem;
         }
-        
+
         .transcript-line.stream-a {
-            border-left-color: #4caf50;
+            border-left-color: #4ade80;
         }
-        
+
         .transcript-line.stream-b {
-            border-left-color: #2196f3;
+            border-left-color: #60a5fa;
         }
-        
+
         .transcript-timestamp {
-            color: #888;
-            font-size: 0.75rem;
-            margin-right: 0.5rem;
+            color: #7c879f;
+            font-size: 0.7rem;
+            margin-right: 0.4rem;
         }
-        
+
         .transcript-label {
             font-weight: 600;
-            margin-right: 0.5rem;
+            margin-right: 0.4rem;
         }
-        
+
         .transcript-label.stream-a {
-            color: #4caf50;
+            color: #4ade80;
         }
-        
+
         .transcript-label.stream-b {
-            color: #2196f3;
+            color: #60a5fa;
         }
-        
+
         .transcript-text {
-            color: #e0e0e0;
+            color: #e0e4f0;
         }
-        
+
         .transcript-text.interim {
             opacity: 0.6;
             font-style: italic;
         }
-        
-        .chat-content {
-            flex: 1;
+
+        .input-area {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid #262b3a;
             display: flex;
-            flex-direction: column;
-            overflow: hidden;
+            gap: 0.75rem;
+            align-items: center;
+            background: #121620;
         }
-        
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 1rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-        
-        .chat-message {
-            padding: 0.75rem 1rem;
-            border-radius: 8px;
-            max-width: 80%;
-            word-wrap: break-word;
-        }
-        
-        .chat-message.user {
-            background: #4a4a4a;
-            align-self: flex-end;
-        }
-        
-        .chat-message.assistant {
-            background: #2a4a2a;
-            align-self: flex-start;
-        }
-        
-        .chat-input-area {
-            padding: 1rem;
-            border-top: 1px solid #3a3a3a;
-            display: flex;
-            gap: 0.5rem;
-        }
-        
-        .chat-input {
+
+        .input-area input {
             flex: 1;
             padding: 0.75rem;
-            background: #2a2a2a;
-            border: 1px solid #3a3a3a;
-            border-radius: 4px;
-            color: #e0e0e0;
+            background: #0f131c;
+            border: 1px solid #2b3244;
+            border-radius: 8px;
+            color: #e6e8ef;
             font-size: 0.9rem;
         }
-        
-        .chat-input:focus {
+
+        .input-area input:focus {
             outline: none;
-            border-color: #4a4a4a;
+            border-color: #4f46e5;
+        }
+
+        .input-area .hint {
+            font-size: 0.75rem;
+            color: #7c879f;
+        }
+
+        @media (max-width: 900px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .transcript-pane {
+                width: 100%;
+                max-width: none;
+                border-left: none;
+                border-top: 1px solid #262b3a;
+            }
+
+            .transcript-pane.collapsed {
+                width: 100%;
+                height: 48px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="header">
+        <h1>4 Signals Socratic Coach</h1>
         <button id="startBtn">Start Audio</button>
         <button id="stopBtn" disabled>Stop Audio</button>
         <div class="status" id="status">Stopped</div>
     </div>
-    
+
     <div class="container">
-        <div class="pane">
-            <div class="pane-header">Live Transcript</div>
-            <div class="transcript-content" id="transcriptContent">
-                <div style="color: #888; padding: 1rem;">Waiting for audio to start...</div>
+        <div class="signals-pane">
+            <div class="best-question">
+                <h2>Best next question</h2>
+                <p id="bestQuestionText">Waiting for transcript to begin.</p>
             </div>
+            <div class="signals-grid" id="signalsGrid"></div>
         </div>
-        
-        <div class="pane">
-            <div class="pane-header">Coach Chat</div>
-            <div class="chat-content">
-                <div class="chat-messages" id="chatMessages">
-                    <div class="chat-message assistant">
-                        <div>I'm your Socratic coach. I'll ask probing questions to help you reflect on your conversations. What would you like to explore?</div>
-                    </div>
-                </div>
-                <div class="chat-input-area">
-                    <input type="text" class="chat-input" id="chatInput" placeholder="Ask a question..." />
-                    <button id="sendBtn">Send</button>
-                </div>
+
+        <div class="transcript-pane collapsed" id="transcriptPane">
+            <div class="transcript-header">
+                <span class="transcript-title">Transcript</span>
+                <button id="toggleTranscript">Open</button>
+            </div>
+            <div class="transcript-content" id="transcriptContent">
+                <div style="color: #7c879f; padding: 1rem;">Waiting for audio to start...</div>
             </div>
         </div>
     </div>
-    
+
+    <div class="input-area">
+        <input type="text" id="coachInput" placeholder="Ask a Socratic question…" />
+        <button id="copyBtn">Copy</button>
+        <div class="hint" id="copyHint"></div>
+    </div>
+
     <script>
         const API_BASE = '';
-        
+        const POLL_INTERVAL_MS = 2000;
+
         let eventSource = null;
         let audioRunning = false;
-        
+        let pollHandle = null;
+        let transcriptOpen = false;
+
+        const transcriptContent = document.getElementById('transcriptContent');
+        const transcriptPane = document.getElementById('transcriptPane');
+        const toggleTranscriptBtn = document.getElementById('toggleTranscript');
+        const signalsGrid = document.getElementById('signalsGrid');
+        const bestQuestionText = document.getElementById('bestQuestionText');
+        const coachInput = document.getElementById('coachInput');
+        const copyHint = document.getElementById('copyHint');
+
+        const SIGNAL_KINDS = [
+            { key: 'reasoning', label: 'Reasoning', actions: ['socratic_question', 'explain'], actionLabels: ['Socratic Q', 'Explain'] },
+            { key: 'accountability', label: 'Accountability', actions: ['reask', 'narrow', 'direct'], actionLabels: ['Re-ask', 'Narrow', 'Direct'] },
+            { key: 'language', label: 'Language', actions: ['define_term', 'examples'], actionLabels: ['Define', 'Examples'] },
+            { key: 'drift', label: 'Drift', actions: ['refocus', 'summarize'], actionLabels: ['Refocus', 'Summarize'] },
+        ];
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text ?? '';
+            return div.innerHTML;
+        }
+
+        function formatConfidence(confidence) {
+            const percent = Math.round((confidence || 0) * 100);
+            return `${percent}%`;
+        }
+
+        function setCopyHint(message) {
+            copyHint.textContent = message;
+            if (message) {
+                setTimeout(() => {
+                    if (copyHint.textContent === message) {
+                        copyHint.textContent = '';
+                    }
+                }, 1500);
+            }
+        }
+
+        async function copyToClipboard(text) {
+            if (!text) return;
+            coachInput.value = text;
+            coachInput.focus();
+            coachInput.setSelectionRange(text.length, text.length);
+            try {
+                await navigator.clipboard.writeText(text);
+                setCopyHint('Copied to clipboard');
+            } catch (error) {
+                setCopyHint('Copy failed');
+            }
+        }
+
+        async function parkSignal(signalId) {
+            if (!signalId) return;
+            await fetch(`${API_BASE}/coach/signals/park`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: signalId })
+            });
+        }
+
+        async function resolveSignal(signalId) {
+            if (!signalId) return;
+            await fetch(`${API_BASE}/coach/signals/resolve`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: signalId })
+            });
+        }
+
+        function findBestQuestion(signals) {
+            for (const signal of signals) {
+                if (signal.status !== 'active') continue;
+                const suggested = signal.suggested || {};
+                const candidate = suggested.socratic_question || suggested.reask || suggested.define_term || suggested.refocus || suggested.narrow || suggested.direct || suggested.explain || suggested.examples || suggested.summarize;
+                if (candidate) {
+                    return candidate;
+                }
+            }
+            return 'Listen for the next clear statement to reflect.';
+        }
+
+        function renderSignals(signals) {
+            const signalsByKind = {};
+            for (const kind of SIGNAL_KINDS) {
+                const match = signals.find(signal => signal.kind === kind.key && signal.status === 'active')
+                    || signals.find(signal => signal.kind === kind.key && signal.status === 'parked')
+                    || null;
+                signalsByKind[kind.key] = match;
+            }
+
+            bestQuestionText.textContent = findBestQuestion(signals);
+
+            signalsGrid.innerHTML = '';
+            SIGNAL_KINDS.forEach(kindConfig => {
+                const signal = signalsByKind[kindConfig.key];
+                const card = document.createElement('div');
+                card.className = 'signal-card';
+
+                if (!signal) {
+                    card.innerHTML = `
+                        <div class="signal-header">
+                            <span class="badge">${kindConfig.label}</span>
+                            <span class="confidence">--</span>
+                        </div>
+                        <div class="signal-empty">No active signal yet. Listening for final transcript lines.</div>
+                    `;
+                    signalsGrid.appendChild(card);
+                    return;
+                }
+
+                const evidence = (signal.evidence && signal.evidence.length > 0) ? signal.evidence[0] : null;
+                const evidenceText = evidence ? `“${escapeHtml(evidence.quote)}”` : 'Evidence pending.';
+                const statusText = signal.status === 'parked' ? 'Parked' : 'Active';
+
+                const actionsHtml = kindConfig.actions.map((actionKey, idx) => {
+                    const label = kindConfig.actionLabels[idx];
+                    const text = signal.suggested ? signal.suggested[actionKey] : '';
+                    if (!text) {
+                        return '';
+                    }
+                    const primaryClass = idx === 0 ? 'primary' : '';
+                    return `<button class="${primaryClass}" data-copy="${escapeHtml(text)}">${label}</button>`;
+                }).join('');
+
+                card.innerHTML = `
+                    <div class="signal-header">
+                        <span class="badge">${kindConfig.label}</span>
+                        <span class="confidence">${formatConfidence(signal.confidence)}</span>
+                    </div>
+                    <div class="signal-title">${escapeHtml(signal.title)}</div>
+                    <div class="signal-detail">${escapeHtml(signal.detail)}</div>
+                    <div class="signal-evidence">${evidenceText}</div>
+                    <div class="signal-actions">
+                        ${actionsHtml}
+                        <button data-park="${signal.id}">Park</button>
+                        <button data-resolve="${signal.id}">Resolve</button>
+                    </div>
+                    <div class="signal-status">${statusText}</div>
+                `;
+
+                signalsGrid.appendChild(card);
+            });
+
+            signalsGrid.querySelectorAll('button[data-copy]').forEach(button => {
+                button.addEventListener('click', async () => {
+                    const text = button.getAttribute('data-copy');
+                    await copyToClipboard(text);
+                });
+            });
+
+            signalsGrid.querySelectorAll('button[data-park]').forEach(button => {
+                button.addEventListener('click', async () => {
+                    await parkSignal(button.getAttribute('data-park'));
+                });
+            });
+
+            signalsGrid.querySelectorAll('button[data-resolve]').forEach(button => {
+                button.addEventListener('click', async () => {
+                    await resolveSignal(button.getAttribute('data-resolve'));
+                });
+            });
+        }
+
+        async function fetchSignals() {
+            try {
+                const response = await fetch(`${API_BASE}/coach/signals`);
+                if (!response.ok) return;
+                const data = await response.json();
+                renderSignals(data.signals || []);
+            } catch (error) {
+                console.debug('Signals poll error:', error);
+            }
+        }
+
+        function startSignalPolling() {
+            if (pollHandle) {
+                clearInterval(pollHandle);
+            }
+            pollHandle = setInterval(() => {
+                if (audioRunning) {
+                    fetchSignals();
+                }
+            }, POLL_INTERVAL_MS);
+        }
+
+        function stopSignalPolling() {
+            if (pollHandle) {
+                clearInterval(pollHandle);
+                pollHandle = null;
+            }
+        }
+
         // Audio controls
         document.getElementById('startBtn').addEventListener('click', async () => {
             try {
@@ -243,6 +583,8 @@
                     document.getElementById('status').textContent = 'Running';
                     document.getElementById('status').classList.add('active');
                     startTranscriptStream();
+                    fetchSignals();
+                    startSignalPolling();
                 } else {
                     alert('Failed to start: ' + (result.error || 'Unknown error'));
                 }
@@ -251,7 +593,7 @@
                 alert('Failed to start audio: ' + error.message);
             }
         });
-        
+
         document.getElementById('stopBtn').addEventListener('click', async () => {
             try {
                 await fetch(`${API_BASE}/audio/stop`, { method: 'POST' });
@@ -263,40 +605,40 @@
             document.getElementById('stopBtn').disabled = true;
             document.getElementById('status').textContent = 'Stopped';
             document.getElementById('status').classList.remove('active');
+            stopSignalPolling();
             if (eventSource) {
                 eventSource.close();
                 eventSource = null;
             }
-            document.getElementById('transcriptContent').innerHTML = '<div style="color: #888; padding: 1rem;">Audio stopped.</div>';
+            transcriptContent.innerHTML = '<div style="color: #7c879f; padding: 1rem;">Audio stopped.</div>';
         });
-        
+
         // Transcript streaming
         function startTranscriptStream() {
             if (eventSource) {
                 eventSource.close();
             }
-            
+
             eventSource = new EventSource(`${API_BASE}/transcript/stream`);
-            const transcriptContent = document.getElementById('transcriptContent');
-            
-            // Clear initial message
+
             if (transcriptContent.children.length === 1 && transcriptContent.children[0].textContent.includes('Waiting')) {
                 transcriptContent.innerHTML = '';
             }
-            
+
             eventSource.onmessage = (event) => {
-                // EventSource automatically strips 'data: ' prefix, so event.data is the JSON string
-                // Handle both cases: with or without 'data: ' prefix (for robustness)
                 let dataStr = event.data;
                 if (dataStr.startsWith('data: ')) {
                     dataStr = dataStr.substring(6);
                 }
-                
-                // Skip heartbeat messages
+
                 if (dataStr.trim() === '' || dataStr === 'heartbeat') {
                     return;
                 }
-                
+
+                if (!transcriptOpen) {
+                    return;
+                }
+
                 try {
                     const data = JSON.parse(dataStr);
                     addTranscriptLine(data);
@@ -304,94 +646,41 @@
                     console.error('Error parsing transcript event:', e, 'Data:', dataStr);
                 }
             };
-            
+
             eventSource.onerror = () => {
                 if (audioRunning) {
-                    // Reconnect after delay
                     setTimeout(startTranscriptStream, 2000);
                 }
             };
         }
-        
+
         function addTranscriptLine(data) {
-            const transcriptContent = document.getElementById('transcriptContent');
             const line = document.createElement('div');
             line.className = `transcript-line stream-${data.stream.toLowerCase()}`;
-            
+
             const timestamp = new Date(data.ts * 1000).toLocaleTimeString();
             const label = data.stream === 'A' ? 'MIC' : 'LOOP';
-            
+
             line.innerHTML = `
                 <span class="transcript-timestamp">${timestamp}</span>
                 <span class="transcript-label stream-${data.stream.toLowerCase()}">[${label}]</span>
                 <span class="transcript-text ${data.is_final ? '' : 'interim'}">${escapeHtml(data.text)}</span>
             `;
-            
+
             transcriptContent.appendChild(line);
             transcriptContent.scrollTop = transcriptContent.scrollHeight;
         }
-        
-        // Chat
-        const chatInput = document.getElementById('chatInput');
-        const sendBtn = document.getElementById('sendBtn');
-        const chatMessages = document.getElementById('chatMessages');
-        
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        
-        async function sendMessage() {
-            const message = chatInput.value.trim();
-            if (!message) return;
-            
-            // Add user message to UI
-            const userMsg = document.createElement('div');
-            userMsg.className = 'chat-message user';
-            userMsg.textContent = message;
-            chatMessages.appendChild(userMsg);
-            chatInput.value = '';
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-            
-            // Send to backend
-            try {
-                const response = await fetch(`${API_BASE}/coach/chat`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message })
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                
-                const result = await response.json();
-                
-                // Add assistant response
-                const assistantMsg = document.createElement('div');
-                assistantMsg.className = 'chat-message assistant';
-                assistantMsg.innerHTML = escapeHtml(result.response).replace(/\n/g, '<br>');
-                chatMessages.appendChild(assistantMsg);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            } catch (error) {
-                console.error('Chat error:', error);
-                const errorMsg = document.createElement('div');
-                errorMsg.className = 'chat-message assistant';
-                errorMsg.style.background = '#4a2a2a';
-                errorMsg.textContent = 'Error: ' + error.message;
-                chatMessages.appendChild(errorMsg);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }
-        }
-        
-        sendBtn.addEventListener('click', sendMessage);
-        chatInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
+
+        toggleTranscriptBtn.addEventListener('click', () => {
+            transcriptOpen = !transcriptOpen;
+            transcriptPane.classList.toggle('collapsed', !transcriptOpen);
+            toggleTranscriptBtn.textContent = transcriptOpen ? 'Close' : 'Open';
         });
-        
+
+        document.getElementById('copyBtn').addEventListener('click', async () => {
+            await copyToClipboard(coachInput.value);
+        });
+
         // Status polling
         setInterval(async () => {
             if (audioRunning) {
@@ -401,15 +690,16 @@
                         const status = await response.json();
                         const micBytes = (status.mic?.bytes_received || 0).toLocaleString();
                         const loopBytes = (status.loopback?.bytes_received || 0).toLocaleString();
-                        document.getElementById('status').textContent = 
+                        document.getElementById('status').textContent =
                             `Running | Mic: ${micBytes} bytes | Loopback: ${loopBytes} bytes`;
                     }
                 } catch (error) {
-                    // Silently ignore status polling errors
                     console.debug('Status poll error:', error);
                 }
             }
         }, 2000);
+
+        renderSignals([]);
     </script>
 </body>
 </html>

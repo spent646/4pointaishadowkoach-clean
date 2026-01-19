@@ -1,5 +1,6 @@
 """Gemini coach with Socratic questioning behavior."""
 
+import json
 from typing import List
 from backend.models import TranscriptEvent
 from backend.coaches.base_coach import BaseCoach, SOCRATIC_PROMPT
@@ -120,3 +121,66 @@ class GeminiCoach(BaseCoach):
         self._add_to_history("assistant", assistant_text)
         
         return assistant_text
+
+    def generate_signals(
+        self,
+        transcript_events: List[TranscriptEvent],
+        prior_signals: List[dict],
+    ) -> List[dict]:
+        """Generate coaching signals based on transcript events."""
+        transcript_payload = [
+            {
+                "stream": event.stream,
+                "text": event.text,
+                "ts": event.ts,
+            }
+            for event in transcript_events[-30:]
+            if event.is_final
+        ]
+        prompt = (
+            "You are a gentle Socratic coach that detects four signal types:\n"
+            "reasoning (weak inference/overgeneralization/fallacy risk),\n"
+            "accountability (question not answered/dodged),\n"
+            "language (loaded or ambiguous term),\n"
+            "drift (topic shift/tangent).\n\n"
+            "Rules:\n"
+            "- Never accuse intent.\n"
+            "- Use coach-like, supportive language.\n"
+            "- Only use evidence present in the transcript.\n"
+            "- Return STRICT JSON only, no markdown.\n"
+            "- Output object format: {\"signals\": [ ... ]}\n"
+            "- Each signal should include kind, confidence (0-1), title, detail, evidence, suggested.\n"
+            "- Evidence items: {\"stream\":\"A\"|\"B\", \"quote\": str, \"ts\": float|null}\n"
+            "- Suggested keys vary by kind:\n"
+            "  reasoning: socratic_question, explain\n"
+            "  accountability: reask, narrow, direct\n"
+            "  language: define_term, examples\n"
+            "  drift: refocus, summarize\n\n"
+            "Recent transcript events (final only):\n"
+            f"{json.dumps(transcript_payload, ensure_ascii=False)}\n\n"
+            "Recent signals to avoid repeating:\n"
+            f"{json.dumps(prior_signals, ensure_ascii=False)}\n\n"
+            "Return JSON now."
+        )
+
+        try:
+            response = self.model.generate_content(
+                prompt,
+                stream=False,
+                generation_config={
+                    "temperature": 0.4,
+                    "top_p": 0.9,
+                    "top_k": 40,
+                    "max_output_tokens": 1024,
+                },
+            )
+            raw_text = response.text if hasattr(response, "text") else str(response)
+        except Exception as exc:
+            print(f"Gemini signal generation error: {exc}")
+            return []
+
+        parsed = self._extract_json(raw_text)
+        if not parsed or "signals" not in parsed:
+            return []
+        signals = parsed.get("signals")
+        return signals if isinstance(signals, list) else []
