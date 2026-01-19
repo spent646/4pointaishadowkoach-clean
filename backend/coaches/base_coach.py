@@ -1,7 +1,9 @@
 """Abstract base class for AI coaches."""
 
 from abc import ABC, abstractmethod
-from typing import List, Dict
+from typing import Dict, List, Optional
+import json
+import re
 import time
 from backend.models import CoachMessage, TranscriptEvent
 
@@ -38,6 +40,23 @@ class BaseCoach(ABC):
         
         Returns:
             Assistant's response text
+        """
+        pass
+
+    @abstractmethod
+    def generate_signals(
+        self,
+        transcript_events: List[TranscriptEvent],
+        prior_signals: List[Dict],
+    ) -> List[Dict]:
+        """Generate coaching signals based on transcript events.
+
+        Args:
+            transcript_events: Recent transcript events.
+            prior_signals: Recent signals to avoid repeats.
+
+        Returns:
+            List of signal dictionaries.
         """
         pass
     
@@ -83,3 +102,16 @@ class BaseCoach(ABC):
         context_parts.append("\n\nRespond with Socratic questions (3-7 questions):")
         
         return "\n".join(context_parts)
+
+    def _extract_json(self, text: str) -> Optional[Dict]:
+        """Attempt to parse JSON from a string response."""
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError:
+            match = re.search(r"\{[\s\S]*\}", text)
+            if not match:
+                return None
+            try:
+                return json.loads(match.group(0))
+            except json.JSONDecodeError:
+                return None
